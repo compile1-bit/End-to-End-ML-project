@@ -7,4 +7,5 @@ xgboost
 lightgbm
 flask
 gunicorn
--e .
+dill
+# -e .
