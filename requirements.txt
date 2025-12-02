@@ -8,4 +8,5 @@ lightgbm
 flask
 gunicorn
 dill
+xgboost
 # -e .
