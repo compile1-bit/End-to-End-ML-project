@@ -3,144 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Exam Performance Prediction</title>
-    <!-- Load Tailwind CSS for modern styling -->
+    <title>ML Prediction Dashboard</title>
+    <!-- Load Inter Font and Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <!-- Custom styling for form elements -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
         .form-label {
-            @apply block text-sm font-medium text-gray-700 mb-1;
+            @apply block text-sm font-semibold text-gray-700 mb-1;
         }
         .form-control {
-            @apply w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500;
+            @apply w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150;
         }
         .btn-primary {
-            @apply w-full px-4 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out;
+            /* Now only takes 2/3 width to accommodate the Reset button */
+            @apply px-6 py-3 text-lg font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-[1.01];
+        }
+        /* Style for the new Reset button */
+        .btn-secondary {
+            @apply px-6 py-3 text-lg font-bold text-gray-700 border-2 border-gray-400 rounded-xl shadow-md hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-[1.01];
+        }
+        
+        /* Simple result card animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center font-sans p-4">
-
-    <div class="login bg-white p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-200">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-center text-indigo-700 mb-6">
-            Student Exam Performance Indicator
-        </h1>
+<!-- UPDATED: Reduced body padding from p-4 to p-2 for a more full-screen look -->
+<body class="min-h-screen flex items-center justify-center p-2 bg-gradient-to-br from-indigo-50 to-purple-100">
     
-        <form action="{{ url_for('predict_datapoint')}}" method="post" class="space-y-6">
-            <h1 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-6">
-                <legend>Student Exam Performance Prediction</legend>
-            </h1>
+    <!-- UPDATED: Removed max-w-4xl to allow the card to take up most of the screen width -->
+    <div class="bg-slate-50 p-6 md:p-12 rounded-3xl shadow-2xl w-full border border-indigo-100">
+        <h1 class="text-4xl font-extrabold text-center text-indigo-800 mb-2">
+            Student Performance Predictor
+        </h1>
+        <p class="text-center text-gray-500 mb-8">
+            Predict the Maths Score based on student characteristics.
+        </p>
+    
+        <!-- Form Structure -->
+        <form id="predictionForm" action="{{ url_for('predict_datapoint')}}" method="post" class="space-y-8">
+            <h2 class="text-2xl font-bold text-gray-700 border-b pb-4 mb-6">
+                Input Features
+            </h2>
         
-            <!-- Input Fields (using flexbox for responsive 2-column layout on desktop) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Input Fields: Responsive Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
 
                 <!-- Gender -->
-                <div class="mb-3">
+                <div>
                     <label class="form-label" for="gender">Gender</label>
                     <select class="form-control" id="gender" name="gender" required>
-                        <option class="placeholder" selected disabled value="">Select your Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
+                        <option class="placeholder" selected disabled value="">Select Gender</option>
+                        <option value="male" {% if request.form.get('gender') == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if request.form.get('gender') == 'female' %}selected{% endif %}>Female</option>
                     </select>
                 </div>
 
                 <!-- Race or Ethnicity -->
-                <div class="mb-3">
+                <div>
                     <label class="form-label" for="race_ethnicity">Race or Ethnicity</label>
                     <select class="form-control" id="race_ethnicity" name="race_ethnicity" required>
                         <option class="placeholder" selected disabled value="">Select Ethnicity</option>
-                        <option value="group A">Group A</option>
-                        <option value="group B">Group B</option>
-                        <option value="group C">Group C</option>
-                        <option value="group D">Group D</option>
-                        <option value="group E">Group E</option>
+                        <option value="group A" {% if request.form.get('race_ethnicity') == 'group A' %}selected{% endif %}>Group A</option>
+                        <option value="group B" {% if request.form.get('race_ethnicity') == 'group B' %}selected{% endif %}>Group B</option>
+                        <option value="group C" {% if request.form.get('race_ethnicity') == 'group C' %}selected{% endif %}>Group C</option>
+                        <option value="group D" {% if request.form.get('race_ethnicity') == 'group D' %}selected{% endif %}>Group D</option>
+                        <option value="group E" {% if request.form.get('race_ethnicity') == 'group E' %}selected{% endif %}>Group E</option>
                     </select>
                 </div>
             
                 <!-- Parental Level of Education -->
-                <div class="mb-3">
-                    <label class="form-label" for="parental_level_of_education">Parental Level of Education</label>
+                <div>
+                    <label class="form-label" for="parental_level_of_education">Parental Education</label>
                     <select class="form-control" id="parental_level_of_education" name="parental_level_of_education" required>
                         <option class="placeholder" selected disabled value="">Select Parent Education</option>
-                        <option value="associate's degree">Associate's Degree</option>
-                        <option value="bachelor's degree">Bachelor's Degree</option>
-                        <option value="high school">High School</option>
-                        <option value="master's degree">Master's Degree</option>
-                        <option value="some college">Some College</option>
-                        <option value="some high school">Some High School</option>
+                        <option value="associate's degree" {% if request.form.get('parental_level_of_education') == "associate's degree" %}selected{% endif %}>Associate's Degree</option>
+                        <option value="bachelor's degree" {% if request.form.get('parental_level_of_education') == "bachelor's degree" %}selected{% endif %}>Bachelor's Degree</option>
+                        <option value="high school" {% if request.form.get('parental_level_of_education') == 'high school' %}selected{% endif %}>High School</option>
+                        <option value="master's degree" {% if request.form.get('parental_level_of_education') == "master's degree" %}selected{% endif %}>Master's Degree</option>
+                        <option value="some college" {% if request.form.get('parental_level_of_education') == 'some college' %}selected{% endif %}>Some College</option>
+                        <option value="some high school" {% if request.form.get('parental_level_of_education') == 'some high school' %}selected{% endif %}>Some High School</option>
                     </select>
                 </div>
             
                 <!-- Lunch Type -->
-                <div class="mb-3">
+                <div>
                     <label class="form-label" for="lunch">Lunch Type</label>
                     <select class="form-control" id="lunch" name="lunch" required>
                         <option class="placeholder" selected disabled value="">Select Lunch Type</option>
-                        <option value="free/reduced">Free/Reduced</option>
-                        <option value="standard">Standard</option>
+                        <option value="free/reduced" {% if request.form.get('lunch') == 'free/reduced' %}selected{% endif %}>Free/Reduced</option>
+                        <option value="standard" {% if request.form.get('lunch') == 'standard' %}selected{% endif %}>Standard</option>
                     </select>
                 </div>
             
                 <!-- Test preparation Course -->
-                <div class="mb-3">
-                    <label class="form-label" for="test_preparation_course">Test preparation Course</label>
+                <div>
+                    <label class="form-label" for="test_preparation_course">Test Prep Course</label>
                     <select class="form-control" id="test_preparation_course" name="test_preparation_course" required>
                         <option class="placeholder" selected disabled value="">Select Test Course</option>
-                        <option value="none">None</option>
-                        <option value="completed">Completed</option>
+                        <option value="none" {% if request.form.get('test_preparation_course') == 'none' %}selected{% endif %}>None</option>
+                        <option value="completed" {% if request.form.get('test_preparation_course') == 'completed' %}selected{% endif %}>Completed</option>
                     </select>
                 </div>
             
                 <!-- Reading Score -->
-                <div class="mb-3">
-                    <label class="form-label" for="reading_score">Reading Score out of 100</label>
-                    <!-- FIX: Corrected name to 'reading_score' and ensured type is number -->
-                    <input class="form-control" type="number" name="reading_score" id="reading_score"
-                        placeholder="Enter your Reading score" min='0' max='100' required />
+                <div>
+                    <label class="form-label" for="reading_score">Reading Score (0-100)</label>
+                    <input class="form-control text-xl text-center font-extrabold" type="number" name="reading_score" id="reading_score"
+                        placeholder="e.g., 75" min='0' max='100' required 
+                        value="{{ request.form.get('reading_score', '') }}" />
                 </div>
             
                 <!-- Writing Score -->
-                <div class="mb-3">
-                    <label class="form-label" for="writing_score">Writing Score out of 100</label>
-                    <!-- FIX: Corrected name to 'writing_score' and ensured type is number -->
-                    <input class="form-control" type="number" name="writing_score" id="writing_score"
-                        placeholder="Enter your Writing Score" min='0' max='100' required />
+                <div>
+                    <label class="form-label" for="writing_score">Writing Score (0-100)</label>
+                    <input class="form-control text-xl text-center font-extrabold" type="number" name="writing_score" id="writing_score"
+                        placeholder="e.g., 68" min='0' max='100' required 
+                        value="{{ request.form.get('writing_score', '') }}" />
                 </div>
-
-                <!-- Spacer div to align the button on the second column if needed on desktop -->
-                <div class="hidden md:block"></div> 
+                
+                <!-- Empty div for layout spacing -->
+                <div></div>
+                
             </div>
 
-            <!-- Submit Button -->
-            <div class="mb-3 pt-4">
-                <input class="btn-primary cursor-pointer" type="submit" value="Predict your Maths Score" />
+            <!-- Action Buttons Container (UPDATED) -->
+            <div class="pt-6 flex gap-4">
+                <!-- NEW: Secondary button for resetting the form -->
+                <button type="button" id="resetBtn" class="btn-secondary cursor-pointer w-1/3">
+                    Reset Form
+                </button>
+                <!-- Primary submit button -->
+                <input class="btn-primary cursor-pointer w-2/3" type="submit" value="Predict Maths Score" />
             </div>
-
         </form>
 
-        <!-- Prediction Result Display Area -->
-        <h2 class="text-xl font-bold mt-8 p-4 rounded-lg bg-indigo-50 text-center text-gray-800">
-            THE prediction is 
-            <span class="text-indigo-600 font-extrabold block text-3xl mt-2">
-                {% if results %}
-                    {{ results }}
-                {% else %}
-                    Enter data and press 'Predict'
-                {% endif %}
-            </span>
-        </h2>
+        <!-- The area for the Prediction Result has been removed as requested in the previous turn. -->
+        
     </div>
 
+    <!-- Minimal JavaScript for Reset Button -->
+    <script>
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            const form = document.getElementById('predictionForm');
+            // resultCard is not in HTML anymore, but keeping the cleanup logic won't hurt
+            const resultCard = document.getElementById('resultCard'); 
+
+            // 1. Reset the form fields to their initial state
+            form.reset();
+
+            // 2. Clear any displayed prediction result for a cleaner slate
+            if (resultCard) {
+                resultCard.remove();
+            }
+        });
+    </script>
 </body>
 </html>

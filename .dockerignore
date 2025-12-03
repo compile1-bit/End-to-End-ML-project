@@ -1,0 +1,25 @@
+Virtual environment, not needed in container
+
+venv/
+
+Python compiled files
+
+pycache/
+*.pyc
+*.pyo
+
+Development and training related files
+
+.git
+.gitignore
+.vscode/
+.ebextensions/ # AWS configuration
+catboost_info/
+logs/
+notebooks/
+
+Ignore the application file that is not the main entry point
+
+application.py
+
+If your artifacts were huge, you might list files to ignore within that folder here
