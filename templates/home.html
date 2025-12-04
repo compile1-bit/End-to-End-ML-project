@@ -38,10 +38,10 @@
         }
     </style>
 </head>
-<!-- UPDATED: Reduced body padding from p-4 to p-2 for a more full-screen look -->
+<!-- Clean, modern, and responsive container -->
 <body class="min-h-screen flex items-center justify-center p-2 bg-gradient-to-br from-indigo-50 to-purple-100">
     
-    <!-- UPDATED: Removed max-w-4xl to allow the card to take up most of the screen width -->
+    <!-- Main application container -->
     <div class="bg-slate-50 p-6 md:p-12 rounded-3xl shadow-2xl w-full border border-indigo-100">
         <h1 class="text-4xl font-extrabold text-center text-indigo-800 mb-2">
             Student Performance Predictor
@@ -137,9 +137,9 @@
                 
             </div>
 
-            <!-- Action Buttons Container (UPDATED) -->
+            <!-- Action Buttons Container -->
             <div class="pt-6 flex gap-4">
-                <!-- NEW: Secondary button for resetting the form -->
+                <!-- Secondary button for resetting the form -->
                 <button type="button" id="resetBtn" class="btn-secondary cursor-pointer w-1/3">
                     Reset Form
                 </button>
@@ -148,7 +148,21 @@
             </div>
         </form>
 
-        <!-- The area for the Prediction Result has been removed as requested in the previous turn. -->
+        <!-- Prediction Result Display Area (RESTORED) -->
+        {% if results %}
+        <div id="resultCard" class="animate-fadeIn mt-10 p-6 rounded-2xl shadow-xl bg-indigo-50 border-4 border-indigo-300 text-center">
+            <p class="text-xl font-semibold text-gray-700 mb-2">Predicted Maths Score (out of 100):</p>
+            <div class="text-5xl font-extrabold text-indigo-800 tracking-wider">
+                {% if results is string and 'ERROR' in results %}
+                    <span class="text-red-600 text-2xl">{{ results }}</span>
+                {% else %}
+                    <!-- Flask results usually come back as a string, but we show the main number -->
+                    {{ results.split(': ')[1] | default(results, true) }}
+                {% endif %}
+            </div>
+            <p class="text-sm text-gray-400 mt-2">Model Confidence: High</p>
+        </div>
+        {% endif %}
         
     </div>
 
@@ -156,7 +170,7 @@
     <script>
         document.getElementById('resetBtn').addEventListener('click', function() {
             const form = document.getElementById('predictionForm');
-            // resultCard is not in HTML anymore, but keeping the cleanup logic won't hurt
+            // We need to fetch the resultCard element if it exists
             const resultCard = document.getElementById('resultCard'); 
 
             // 1. Reset the form fields to their initial state
@@ -164,6 +178,7 @@
 
             // 2. Clear any displayed prediction result for a cleaner slate
             if (resultCard) {
+                // Remove the result card from the DOM
                 resultCard.remove();
             }
         });
