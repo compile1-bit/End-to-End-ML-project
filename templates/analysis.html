@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Impact Analyzer</title>
+    <!-- Load D3.js and Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* D3 Chart Tooltip Style */
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 lg:p-8 bg-gradient-to-br from-indigo-50 to-pink-100">
+
+    <!-- Main Content Wrapper -->
+    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-7xl border border-pink-200">
+        
+        <!-- Header and Navigation -->
+        <div class="flex flex-col justify-between items-center mb-6 border-b pb-4">
+            <h1 class="text-4xl font-extrabold text-pink-800 mb-4 text-center">
+                Model Impact Analyzer
+            </h1>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="{{ url_for('home') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out">
+                    &larr; Prediction
+                </a>
+                <a href="{{ url_for('show_dashboard') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-purple-600 rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 ease-in-out">
+                    View Dashboard
+                </a>
+                <a href="{{ url_for('show_data_health') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-green-600 rounded-xl shadow-lg hover:bg-green-700 transition duration-300 ease-in-out">
+                    Data Health
+                </a>
+                <!-- NEW LINK -->
+                <a href="{{ url_for('show_model_registry') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-red-600 rounded-xl shadow-lg hover:bg-red-700 transition duration-300 ease-in-out">
+                    Model Registry
+                </a>
+            </div>
+        </div>
+
+        <p class="text-gray-500 mb-8 text-center">
+            Visualize the importance of each feature in predicting the Math Score.
+        </p>
+        
+        <!-- Chart Container -->
+        <div id="feature-importance-chart" class="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Feature Importance (Simulated) </h2>
+            <!-- D3.js chart will be rendered here -->
+        </div>
+        
+        <!-- Scenario Analysis Section -->
+        <div class="mt-12 p-6 bg-pink-50 rounded-2xl border border-pink-200 shadow-md">
+            <h2 class="text-2xl font-bold text-pink-700 mb-4">Scenario Analysis: Test Prep Impact</h2>
+            <p class="text-gray-600 mb-6">
+                Change the **Test Preparation Course** status below to see the simulated prediction difference (assuming average scores for Reading/Writing).
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-6 items-start">
+                
+                <!-- Input Control -->
+                <div class="w-full sm:w-1/3">
+                    <label class="block text-sm font-semibold text-pink-700 mb-1" for="scenario-test-prep">Select Test Prep Status:</label>
+                    <select id="scenario-test-prep" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-pink-600 focus:border-pink-600 transition duration-150" onchange="runScenarioAnalysis()">
+                        <option value="none">None</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <!-- Output Display -->
+                <div class="w-full sm:w-2/3 p-4 bg-white rounded-xl border border-pink-300 shadow-inner">
+                    <p class="text-lg font-semibold text-gray-700">Simulated Predicted Math Score:</p>
+                    <div id="scenario-result" class="text-4xl font-extrabold text-pink-600 mt-1">
+                        --
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">
+                        *This analysis uses placeholder values (e.g., Reading: 70, Writing: 70) for non-changing features.*
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- D3.js Visualization Script -->
+    <script>
+        // Data for feature importance (Simulated Shapley or similar values)
+        const featureData = [
+            { feature: "Reading Score", importance: 0.95 },
+            { feature: "Writing Score", importance: 0.88 },
+            { feature: "Test Prep Course", importance: 0.70 },
+            { feature: "Parental Education", importance: 0.45 },
+            { feature: "Lunch Type", importance: 0.35 },
+            { feature: "Race/Ethnicity", importance: 0.20 },
+            { feature: "Gender", importance: 0.15 }
+        ];
+
+        // Scenario logic (Highly simplified simulation based on Test Prep)
+        function runScenarioAnalysis() {
+            const status = document.getElementById('scenario-test-prep').value;
+            const resultElement = document.getElementById('scenario-result');
+            let predictedScore = 70; // Base score for average student (R/W=70)
+
+            if (status === 'completed') {
+                // If completed, add a boost (e.g., 12 points)
+                predictedScore += 12; 
+                resultElement.textContent = Math.round(predictedScore);
+                resultElement.classList.add('text-green-600');
+                resultElement.classList.remove('text-pink-600');
+            } else {
+                // If none, use base score
+                predictedScore += 0; // Explicitly showing no boost
+                resultElement.textContent = Math.round(predictedScore);
+                resultElement.classList.remove('text-green-600');
+                resultElement.classList.add('text-pink-600');
+            }
+        }
+
+        // --- D3.js Chart Rendering ---
+        const margin = { top: 20, right: 20, bottom: 50, left: 160 };
+        const container = document.getElementById('feature-importance-chart');
+        
+        function drawFeatureChart() {
+            d3.select("#feature-importance-chart svg").remove();
+
+            const width = container.clientWidth - margin.left - margin.right;
+            const height = featureData.length * 40; // Height based on number of features
+
+            const svg = d3.select("#feature-importance-chart")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X scale (Importance)
+            const x = d3.scaleLinear()
+                .domain([0, 1])
+                .range([0, width]);
+            
+            // Y scale (Features)
+            const y = d3.scaleBand()
+                .range([0, height])
+                .domain(featureData.map(d => d.feature))
+                .padding(0.2);
+
+            // Add X-axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".0%")))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // X-axis label
+            svg.append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "14px")
+                .text("Relative Importance Score");
+
+            // Add Y-axis (Feature Labels)
+            svg.append("g")
+                .call(d3.axisLeft(y).tickSize(0).tickPadding(10))
+                .selectAll("text")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "600")
+                    .attr("fill", "#374151");
+
+            // Bars
+            svg.selectAll(".bar")
+                .data(featureData)
+                .enter()
+                .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", x(0))
+                    .attr("y", d => y(d.feature))
+                    .attr("width", d => x(d.importance))
+                    .attr("height", y.bandwidth())
+                    .attr("fill", "#db2777") /* Pink-700 */
+                    .attr("rx", 4)
+                    .attr("ry", 4);
+
+            // Values on bars
+            svg.selectAll(".value")
+                .data(featureData)
+                .enter()
+                .append("text")
+                    .attr("class", "value")
+                    .attr("x", d => x(d.importance) + 5)
+                    .attr("y", d => y(d.feature) + y.bandwidth() / 2 + 5)
+                    .text(d => d3.format(".1%")(d.importance))
+                    .attr("fill", "#1f2937") /* Gray-800 */
+                    .attr("font-size", "12px")
+                    .attr("font-weight", "bold");
+        }
+
+        // Run on load and resize
+        drawFeatureChart();
+        runScenarioAnalysis(); // Initialize scenario result
+        window.addEventListener('resize', drawFeatureChart);
+    </script>
+</body>
+</html>

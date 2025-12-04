@@ -12,21 +12,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-
-        .form-label {
-            @apply block text-sm font-semibold text-gray-700 mb-1;
-        }
-        .form-control {
-            @apply w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150;
-        }
-        .btn-primary {
-            /* Now only takes 2/3 width to accommodate the Reset button */
-            @apply px-6 py-3 text-lg font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-[1.01];
-        }
-        /* Style for the new Reset button */
-        .btn-secondary {
-            @apply px-6 py-3 text-lg font-bold text-gray-700 border-2 border-gray-400 rounded-xl shadow-md hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-[1.01];
-        }
         
         /* Simple result card animation */
         @keyframes fadeIn {
@@ -38,131 +23,190 @@
         }
     </style>
 </head>
-<!-- Clean, modern, and responsive container -->
-<body class="min-h-screen flex items-center justify-center p-2 bg-gradient-to-br from-indigo-50 to-purple-100">
-    
-    <!-- Main application container -->
-    <div class="bg-slate-50 p-6 md:p-12 rounded-3xl shadow-2xl w-full border border-indigo-100">
-        <h1 class="text-4xl font-extrabold text-center text-indigo-800 mb-2">
-            Student Performance Predictor
-        </h1>
-        <p class="text-center text-gray-500 mb-8">
-            Predict the Maths Score based on student characteristics.
-        </p>
-    
-        <!-- Form Structure -->
-        <form id="predictionForm" action="{{ url_for('predict_datapoint')}}" method="post" class="space-y-8">
-            <h2 class="text-2xl font-bold text-gray-700 border-b pb-4 mb-6">
-                Input Features
-            </h2>
+<!-- Full screen container -->
+<body class="min-h-screen flex flex-col items-center justify-center p-4 lg:p-8 bg-gradient-to-br from-indigo-50 to-purple-100">
+
+    <!-- Main Application Wrapper - Adjusted max-width for better dual-column viewing on desktop -->
+    <div class="bg-slate-50 p-6 md:p-12 rounded-3xl shadow-2xl w-full max-w-7xl border border-indigo-100">
         
-            <!-- Input Fields: Responsive Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
-
-                <!-- Gender -->
-                <div>
-                    <label class="form-label" for="gender">Gender</label>
-                    <select class="form-control" id="gender" name="gender" required>
-                        <option class="placeholder" selected disabled value="">Select Gender</option>
-                        <option value="male" {% if request.form.get('gender') == 'male' %}selected{% endif %}>Male</option>
-                        <option value="female" {% if request.form.get('gender') == 'female' %}selected{% endif %}>Female</option>
-                    </select>
-                </div>
-
-                <!-- Race or Ethnicity -->
-                <div>
-                    <label class="form-label" for="race_ethnicity">Race or Ethnicity</label>
-                    <select class="form-control" id="race_ethnicity" name="race_ethnicity" required>
-                        <option class="placeholder" selected disabled value="">Select Ethnicity</option>
-                        <option value="group A" {% if request.form.get('race_ethnicity') == 'group A' %}selected{% endif %}>Group A</option>
-                        <option value="group B" {% if request.form.get('race_ethnicity') == 'group B' %}selected{% endif %}>Group B</option>
-                        <option value="group C" {% if request.form.get('race_ethnicity') == 'group C' %}selected{% endif %}>Group C</option>
-                        <option value="group D" {% if request.form.get('race_ethnicity') == 'group D' %}selected{% endif %}>Group D</option>
-                        <option value="group E" {% if request.form.get('race_ethnicity') == 'group E' %}selected{% endif %}>Group E</option>
-                    </select>
-                </div>
-            
-                <!-- Parental Level of Education -->
-                <div>
-                    <label class="form-label" for="parental_level_of_education">Parental Education</label>
-                    <select class="form-control" id="parental_level_of_education" name="parental_level_of_education" required>
-                        <option class="placeholder" selected disabled value="">Select Parent Education</option>
-                        <option value="associate's degree" {% if request.form.get('parental_level_of_education') == "associate's degree" %}selected{% endif %}>Associate's Degree</option>
-                        <option value="bachelor's degree" {% if request.form.get('parental_level_of_education') == "bachelor's degree" %}selected{% endif %}>Bachelor's Degree</option>
-                        <option value="high school" {% if request.form.get('parental_level_of_education') == 'high school' %}selected{% endif %}>High School</option>
-                        <option value="master's degree" {% if request.form.get('parental_level_of_education') == "master's degree" %}selected{% endif %}>Master's Degree</option>
-                        <option value="some college" {% if request.form.get('parental_level_of_education') == 'some college' %}selected{% endif %}>Some College</option>
-                        <option value="some high school" {% if request.form.get('parental_level_of_education') == 'some high school' %}selected{% endif %}>Some High School</option>
-                    </select>
-                </div>
-            
-                <!-- Lunch Type -->
-                <div>
-                    <label class="form-label" for="lunch">Lunch Type</label>
-                    <select class="form-control" id="lunch" name="lunch" required>
-                        <option class="placeholder" selected disabled value="">Select Lunch Type</option>
-                        <option value="free/reduced" {% if request.form.get('lunch') == 'free/reduced' %}selected{% endif %}>Free/Reduced</option>
-                        <option value="standard" {% if request.form.get('lunch') == 'standard' %}selected{% endif %}>Standard</option>
-                    </select>
-                </div>
-            
-                <!-- Test preparation Course -->
-                <div>
-                    <label class="form-label" for="test_preparation_course">Test Prep Course</label>
-                    <select class="form-control" id="test_preparation_course" name="test_preparation_course" required>
-                        <option class="placeholder" selected disabled value="">Select Test Course</option>
-                        <option value="none" {% if request.form.get('test_preparation_course') == 'none' %}selected{% endif %}>None</option>
-                        <option value="completed" {% if request.form.get('test_preparation_course') == 'completed' %}selected{% endif %}>Completed</option>
-                    </select>
-                </div>
-            
-                <!-- Reading Score -->
-                <div>
-                    <label class="form-label" for="reading_score">Reading Score (0-100)</label>
-                    <input class="form-control text-xl text-center font-extrabold" type="number" name="reading_score" id="reading_score"
-                        placeholder="e.g., 75" min='0' max='100' required 
-                        value="{{ request.form.get('reading_score', '') }}" />
-                </div>
-            
-                <!-- Writing Score -->
-                <div>
-                    <label class="form-label" for="writing_score">Writing Score (0-100)</label>
-                    <input class="form-control text-xl text-center font-extrabold" type="number" name="writing_score" id="writing_score"
-                        placeholder="e.g., 68" min='0' max='100' required 
-                        value="{{ request.form.get('writing_score', '') }}" />
-                </div>
-                
-                <!-- Empty div for layout spacing -->
-                <div></div>
-                
+        <!-- Header with Navigation -->
+        <div class="flex flex-col justify-between items-center mb-6">
+            <h1 class="text-4xl font-extrabold text-indigo-800 mb-4 text-center">
+                Student Performance Predictor
+            </h1>
+            <!-- Navigation Links -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="{{ url_for('show_dashboard') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-purple-600 rounded-xl shadow-lg hover:bg-purple-700 transition duration-300">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('show_analysis') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-pink-600 rounded-xl shadow-lg hover:bg-pink-700 transition duration-300">
+                    Impact Analyzer
+                </a>
+                <a href="{{ url_for('show_data_health') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-green-600 rounded-xl shadow-lg hover:bg-green-700 transition duration-300">
+                    Data Health
+                </a>
+                <!-- NEW LINK -->
+                <a href="{{ url_for('show_model_registry') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-red-600 rounded-xl shadow-lg hover:bg-red-700 transition duration-300">
+                    Model Registry
+                </a>
             </div>
+        </div>
+        <p class="text-center text-gray-500 mb-8">
+            Input student characteristics for score prediction and view key metrics.
+        </p>
 
-            <!-- Action Buttons Container -->
-            <div class="pt-6 flex gap-4">
-                <!-- Secondary button for resetting the form -->
-                <button type="button" id="resetBtn" class="btn-secondary cursor-pointer w-1/3">
-                    Reset Form
-                </button>
-                <!-- Primary submit button -->
-                <input class="btn-primary cursor-pointer w-2/3" type="submit" value="Predict Maths Score" />
-            </div>
-        </form>
-
-        <!-- Prediction Result Display Area (RESTORED) -->
+        <!-- Prediction Result Display Area (Top-aligned when results are present) -->
         {% if results %}
-        <div id="resultCard" class="animate-fadeIn mt-10 p-6 rounded-2xl shadow-xl bg-indigo-50 border-4 border-indigo-300 text-center">
+        <div id="resultCard" class="animate-fadeIn mb-8 p-6 rounded-2xl shadow-xl bg-indigo-50 border-4 border-indigo-300 text-center">
             <p class="text-xl font-semibold text-gray-700 mb-2">Predicted Maths Score (out of 100):</p>
             <div class="text-5xl font-extrabold text-indigo-800 tracking-wider">
                 {% if results is string and 'ERROR' in results %}
                     <span class="text-red-600 text-2xl">{{ results }}</span>
                 {% else %}
-                    <!-- Flask results usually come back as a string, but we show the main number -->
                     {{ results.split(': ')[1] | default(results, true) }}
                 {% endif %}
             </div>
-            <p class="text-sm text-gray-400 mt-2">Model Confidence: High</p>
+            <p class="text-sm text-gray-400 mt-2">Currently using **v1.1** model.</p>
         </div>
         {% endif %}
+    
+        <!-- Dual Column Layout for Form and Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- COLUMN 1: Prediction Form (Takes 2/3 width on large screens) -->
+            <div class="lg:col-span-2">
+                <form id="predictionForm" action="{{ url_for('predict_datapoint')}}" method="post" class="space-y-8 p-6 bg-white rounded-2xl shadow-inner border border-gray-100">
+                    <h2 class="text-2xl font-bold text-gray-700 border-b pb-4 mb-6">
+                        Prediction Input
+                    </h2>
+                
+                    <!-- Input Fields: Responsive Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+
+                        <!-- Gender -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="gender">Gender</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150" id="gender" name="gender" required>
+                                <option class="placeholder" selected disabled value="">Select Gender</option>
+                                <option value="male" {% if request.form.get('gender') == 'male' %}selected{% endif %}>Male</option>
+                                <option value="female" {% if request.form.get('gender') == 'female' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
+
+                        <!-- Race or Ethnicity -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="race_ethnicity">Race or Ethnicity</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150" id="race_ethnicity" name="race_ethnicity" required>
+                                <option class="placeholder" selected disabled value="">Select Ethnicity</option>
+                                <option value="group A" {% if request.form.get('race_ethnicity') == 'group A' %}selected{% endif %}>Group A</option>
+                                <option value="group B" {% if request.form.get('race_ethnicity') == 'group B' %}selected{% endif %}>Group B</option>
+                                <option value="group C" {% if request.form.get('race_ethnicity') == 'group C' %}selected{% endif %}>Group C</option>
+                                <option value="group D" {% if request.form.get('race_ethnicity') == 'group D' %}selected{% endif %}>Group D</option>
+                                <option value="group E" {% if request.form.get('race_ethnicity') == 'group E' %}selected{% endif %}>Group E</option>
+                            </select>
+                        </div>
+                    
+                        <!-- Parental Level of Education -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="parental_level_of_education">Parental Education</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150" id="parental_level_of_education" name="parental_level_of_education" required>
+                                <option class="placeholder" selected disabled value="">Select Parent Education</option>
+                                <option value="associate's degree" {% if request.form.get('parental_level_of_education') == "associate's degree" %}selected{% endif %}>Associate's Degree</option>
+                                <option value="bachelor's degree" {% if request.form.get('parental_level_of_education') == "bachelor's degree" %}selected{% endif %}>Bachelor's Degree</option>
+                                <option value="high school" {% if request.form.get('parental_level_of_education') == 'high school' %}selected{% endif %}>High School</option>
+                                <option value="master's degree" {% if request.form.get('parental_level_of_education') == "master's degree" %}selected{% endif %}>Master's Degree</option>
+                                <option value="some college" {% if request.form.get('parental_level_of_education') == 'some college' %}selected{% endif %}>Some College</option>
+                                <option value="some high school" {% if request.form.get('parental_level_of_education') == 'some high school' %}selected{% endif %}>Some High School</option>
+                            </select>
+                        </div>
+                    
+                        <!-- Lunch Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="lunch">Lunch Type</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150" id="lunch" name="lunch" required>
+                                <option class="placeholder" selected disabled value="">Select Lunch Type</option>
+                                <option value="free/reduced" {% if request.form.get('lunch') == 'free/reduced' %}selected{% endif %}>Free/Reduced</option>
+                                <option value="standard" {% if request.form.get('lunch') == 'standard' %}selected{% endif %}>Standard</option>
+                            </select>
+                        </div>
+                    
+                        <!-- Test preparation Course -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="test_preparation_course">Test Prep Course</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150" id="test_preparation_course" name="test_preparation_course" required>
+                                <option class="placeholder" selected disabled value="">Select Test Course</option>
+                                <option value="none" {% if request.form.get('test_preparation_course') == 'none' %}selected{% endif %}>None</option>
+                                <option value="completed" {% if request.form.get('test_preparation_course') == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                    
+                        <!-- Reading Score -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="reading_score">Reading Score (0-100)</label>
+                            <input class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150 text-xl text-center font-extrabold" type="number" name="reading_score" id="reading_score"
+                                placeholder="e.g., 75" min='0' max='100' required 
+                                value="{{ request.form.get('reading_score', '') }}" />
+                        </div>
+                    
+                        <!-- Writing Score -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1" for="writing_score">Writing Score (0-100)</label>
+                            <input class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-600 focus:border-indigo-600 transition duration-150 text-xl text-center font-extrabold" type="number" name="writing_score" id="writing_score"
+                                placeholder="e.g., 68" min='0' max='100' required 
+                                value="{{ request.form.get('writing_score', '') }}" />
+                        </div>
+                        
+                        <!-- Empty div for layout spacing -->
+                        <div></div>
+                        
+                    </div>
+
+                    <!-- Action Buttons Container -->
+                    <div class="pt-6 flex gap-4">
+                        <button type="button" id="resetBtn" class="px-6 py-3 text-lg font-bold text-gray-700 border-2 border-gray-400 rounded-xl shadow-md hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-[1.01] cursor-pointer w-1/3">
+                            Reset Form
+                        </button>
+                        <input class="px-6 py-3 text-lg font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-[1.01] cursor-pointer w-2/3" type="submit" value="Predict Maths Score" />
+                    </div>
+                </form>
+            </div>
+            
+            <!-- COLUMN 2: Dashboard/Analytics (Takes 1/3 width on large screens) -->
+            <div class="lg:col-span-1 space-y-6">
+                <h2 class="text-2xl font-bold text-gray-700 border-b pb-4">
+                    Key Metrics
+                </h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                    
+                    <!-- KPI Card 1: Average Math Score -->
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 h-full flex flex-col justify-center">
+                        <p class="text-sm font-medium text-gray-500">Avg. Math Score (Sample)</p>
+                        <p class="text-3xl font-extrabold text-indigo-600 mt-1">72.4</p>
+                        <p class="text-xs text-green-500 font-semibold mt-1 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            +3.5% vs last period
+                        </p>
+                    </div>
+
+                    <!-- KPI Card 2: Students Completed Test Prep -->
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 h-full flex flex-col justify-center">
+                        <p class="text-sm font-medium text-gray-500">Test Prep Completion Rate</p>
+                        <p class="text-3xl font-extrabold text-purple-600 mt-1">45%</p>
+                        <p class="text-xs text-yellow-600 font-semibold mt-1 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-4a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Stable
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Reminder/Placeholder for Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 h-64 flex items-center justify-center text-gray-400 font-medium text-center">
+                    Detailed Analytics, Data Health, and Model Management available via the navigation links above.
+                </div>
+            </div>
+            
+        </div>
         
     </div>
 
@@ -170,7 +214,6 @@
     <script>
         document.getElementById('resetBtn').addEventListener('click', function() {
             const form = document.getElementById('predictionForm');
-            // We need to fetch the resultCard element if it exists
             const resultCard = document.getElementById('resultCard'); 
 
             // 1. Reset the form fields to their initial state
@@ -178,7 +221,6 @@
 
             // 2. Clear any displayed prediction result for a cleaner slate
             if (resultCard) {
-                // Remove the result card from the DOM
                 resultCard.remove();
             }
         });

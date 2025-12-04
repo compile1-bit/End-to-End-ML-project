@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Health Monitor</title>
+    <!-- Load D3.js and Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* D3 Chart Tooltip Style */
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 lg:p-8 bg-gradient-to-br from-green-50 to-indigo-100">
+
+    <!-- Main Content Wrapper -->
+    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-7xl border border-green-200">
+        
+        <!-- Header and Navigation -->
+        <div class="flex flex-col justify-between items-center mb-6 border-b pb-4">
+            <h1 class="text-4xl font-extrabold text-green-800 mb-4 text-center">
+                Data Health Monitor
+            </h1>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="{{ url_for('home') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out">
+                    &larr; Prediction
+                </a>
+                <a href="{{ url_for('show_dashboard') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-purple-600 rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 ease-in-out">
+                    View Dashboard
+                </a>
+                <a href="{{ url_for('show_analysis') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-pink-600 rounded-xl shadow-lg hover:bg-pink-700 transition duration-300 ease-in-out">
+                    Impact Analyzer
+                </a>
+                <!-- NEW LINK -->
+                <a href="{{ url_for('show_model_registry') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-red-600 rounded-xl shadow-lg hover:bg-red-700 transition duration-300 ease-in-out">
+                    Model Registry
+                </a>
+            </div>
+        </div>
+
+        <p class="text-gray-500 mb-8 text-center">
+            Monitoring the quality, distribution, and completeness of the data feeding the prediction model.
+        </p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- KPI 1: Data Quality Score -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
+                <p class="text-sm font-medium text-gray-500">Data Quality Score</p>
+                <div class="text-5xl font-extrabold text-green-600 mt-1">98.5%</div>
+                <p class="text-xs text-gray-500 mt-2">Overall health score based on completeness and consistency.</p>
+            </div>
+
+            <!-- KPI 2: Missing Values -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
+                <p class="text-sm font-medium text-gray-500">Missing Values Rate</p>
+                <div class="text-5xl font-extrabold text-yellow-600 mt-1">1.2%</div>
+                <p class="text-xs text-gray-500 mt-2">Watch out for features like 'Lunch Type'.</p>
+            </div>
+
+            <!-- KPI 3: Data Drift Indicator -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
+                <p class="text-sm font-medium text-gray-500">Data Drift Score (vs. Training)</p>
+                <div class="text-5xl font-extrabold text-red-600 mt-1">7.5</div>
+                <p class="text-xs text-gray-500 mt-2">Threshold is 10. Low risk currently.</p>
+            </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div id="distribution-chart" class="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">
+                Distribution of Live Math Scores (Simulated)
+                [Image of Math Score Distribution Histogram]
+            </h2>
+            <!-- D3.js chart will be rendered here -->
+        </div>
+
+    </div>
+
+    <!-- D3.js Visualization Script -->
+    <script>
+        // Data simulation for a normal distribution (Math Scores)
+        function generateNormalData(mean, stdDev, numPoints) {
+            let data = [];
+            for (let i = 0; i < numPoints; i++) {
+                // Box-Muller transform for normal distribution
+                let u = 0, v = 0;
+                while (u === 0) u = Math.random(); 
+                while (v === 0) v = Math.random();
+                let z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                let value = mean + stdDev * z;
+                // Clamp scores between 0 and 100
+                data.push(Math.max(0, Math.min(100, Math.round(value))));
+            }
+            return data;
+        }
+
+        const scoreData = generateNormalData(70, 15, 500); // 500 points, mean 70, std dev 15
+
+        // --- D3.js Chart Rendering (Histogram) ---
+        const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+        const container = document.getElementById('distribution-chart');
+        
+        function drawDistributionChart() {
+            d3.select("#distribution-chart svg").remove();
+
+            const width = container.clientWidth - margin.left - margin.right;
+            const height = Math.min(width * 0.5, 400) - margin.top - margin.bottom;
+
+            const svg = d3.select("#distribution-chart")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X scale (Scores 0-100)
+            const x = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, width]);
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(10))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // Define bins for the histogram
+            const histogram = d3.histogram()
+                .value(d => d) 
+                .domain(x.domain())
+                .thresholds(x.ticks(15)); // 15 bins
+
+            const bins = histogram(scoreData);
+
+            // Y scale (Frequency)
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(bins, d => d.length)])
+                .range([height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // Bars
+            svg.selectAll("rect")
+                .data(bins)
+                .enter()
+                .append("rect")
+                    .attr("x", 1)
+                    .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
+                    .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+                    .attr("height", d => height - y(d.length))
+                    .style("fill", "#10b981") /* Emerald-500 */
+                    .attr("rx", 3)
+                    .attr("ry", 3)
+                .append("title")
+                    .text(d => `Scores ${d.x0}-${d.x1}: ${d.length} Students`);
+
+            // Labels
+            svg.append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "14px")
+                .text("Math Score Range");
+
+            svg.append("text")
+                .attr("class", "y label")
+                .attr("text-anchor", "middle")
+                .attr("y", -margin.left + 15)
+                .attr("x", -height / 2)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "14px")
+                .attr("transform", "rotate(-90)")
+                .text("Frequency (Number of Students)");
+        }
+
+        // Run on load and resize
+        drawDistributionChart();
+        window.addEventListener('resize', drawDistributionChart);
+    </script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Registry</title>
+    <!-- Load D3.js and Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* D3 Chart Tooltip Style */
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 lg:p-8 bg-gradient-to-br from-red-50 to-pink-100">
+
+    <!-- Main Content Wrapper -->
+    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-7xl border border-red-200">
+        
+        <!-- Header and Navigation -->
+        <div class="flex flex-col justify-between items-center mb-6 border-b pb-4">
+            <h1 class="text-4xl font-extrabold text-red-800 mb-4 text-center">
+                Model Registry and Deployment
+            </h1>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="{{ url_for('home') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out">
+                    &larr; Prediction
+                </a>
+                <a href="{{ url_for('show_dashboard') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-purple-600 rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 ease-in-out">
+                    View Dashboard
+                </a>
+                <a href="{{ url_for('show_analysis') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-pink-600 rounded-xl shadow-lg hover:bg-pink-700 transition duration-300 ease-in-out">
+                    Impact Analyzer
+                </a>
+                <a href="{{ url_for('show_data_health') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-green-600 rounded-xl shadow-lg hover:bg-green-700 transition duration-300 ease-in-out">
+                    Data Health
+                </a>
+            </div>
+        </div>
+
+        <p class="text-gray-500 mb-8 text-center">
+            View model history, compare performance metrics, and simulate active deployment. 
+        </p>
+        
+        <!-- Model Performance Comparison Chart -->
+        <div id="model-comparison-chart" class="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-200 mb-12">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">
+                Model Performance (RMSE vs. Version)
+            </h2>
+            <!-- D3.js chart will be rendered here -->
+        </div>
+
+        <!-- Scenario Analysis Section -->
+        <div class="mb-12 p-6 bg-red-50 rounded-2xl border border-red-200 shadow-lg">
+            <h2 class="text-2xl font-bold text-red-700 mb-6 border-b pb-3">Scenario Analysis: Model Comparison</h2>
+            <p class="text-gray-600 mb-6">
+                Test custom student profiles against different model versions to compare prediction stability and check for potential model bias across features.
+            </p>
+            
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                
+                <!-- Input Controls -->
+                <div class="w-full md:w-1/2 space-y-4">
+                    
+                    <!-- Core Features (Selects) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-red-700 mb-1" for="scenario-gender">Gender:</label>
+                            <select id="scenario-gender" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-red-600 focus:border-red-600 transition duration-150" onchange="runScenarioAnalysis()">
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-red-700 mb-1" for="scenario-lunch">Lunch:</label>
+                            <select id="scenario-lunch" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-red-600 focus:border-red-600 transition duration-150" onchange="runScenarioAnalysis()">
+                                <option value="standard">Standard</option>
+                                <option value="free/reduced">Free/Reduced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-red-700 mb-1" for="scenario-test-prep">Test Prep Status:</label>
+                            <select id="scenario-test-prep" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-red-600 focus:border-red-600 transition duration-150" onchange="runScenarioAnalysis()">
+                                <option value="completed">Completed</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-red-700 mb-1" for="scenario-model-version">Model Version:</label>
+                            <select id="scenario-model-version" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-red-600 focus:border-red-600 transition duration-150" onchange="runScenarioAnalysis()">
+                                <option value="v2.0 (Latest)">v2.0 (Latest)</option>
+                                <option value="v1.1 (Current)">v1.1 (Current)</option>
+                                <option value="v1.0">v1.0</option>
+                                <option value="v0.9 (Test)">v0.9 (Test)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Score Inputs (Numbers) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-red-700 mb-1" for="scenario-reading-score">Reading Score (0-100):</label>
+                            <input type="number" id="scenario-reading-score" value="70" min="0" max="100" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-red-600 focus:border-red-600 transition duration-150" oninput="runScenarioAnalysis()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-red-700 mb-1" for="scenario-writing-score">Writing Score (0-100):</label>
+                            <input type="number" id="scenario-writing-score" value="70" min="0" max="100" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-red-600 focus:border-red-600 transition duration-150" oninput="runScenarioAnalysis()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Display -->
+                <div class="w-full md:w-1/2 p-6 bg-white rounded-xl border border-red-300 shadow-inner flex flex-col justify-center items-center">
+                    <p class="text-xl font-semibold text-gray-700 mb-2">Simulated Predicted Math Score:</p>
+                    <div id="scenario-result" class="text-7xl font-extrabold text-red-600 transition duration-300">
+                        --
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 text-center">
+                        The predicted score is calculated based on the selected features and the specific bias/sensitivity of the chosen model version.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model List Table -->
+        <div class="overflow-x-auto">
+            <h2 class="text-2xl font-bold text-red-700 mb-4">Model Version History</h2>
+            <table class="min-w-full divide-y divide-gray-200 rounded-xl shadow-md overflow-hidden">
+                <thead class="bg-red-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trained On</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RMSE (Lower is Better)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">R-Squared</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="model-table-body" class="bg-white divide-y divide-gray-100">
+                    <!-- Table rows injected by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- D3.js Visualization and Model Management Script -->
+    <script>
+        // Simulated Model Data
+        const modelData = [
+            { version: 'v2.0 (Latest)', date: '2025-12-01', rmse: 6.8, r2: 0.89, active: false, color: '#9b2c2c' }, // Red-800
+            { version: 'v1.1 (Current)', date: '2025-11-15', rmse: 7.2, r2: 0.85, active: true, color: '#e53e3e' }, // Red-600
+            { version: 'v1.0', date: '2025-10-20', rmse: 8.5, r2: 0.78, active: false, color: '#f6ad55' }, // Orange-400
+            { version: 'v0.9 (Test)', date: '2025-09-01', rmse: 9.1, r2: 0.75, active: false, color: '#d39800' } // Yellow-800
+        ].sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date for chart
+
+        // State management for active model (Simulated)
+        let activeModelVersion = modelData.find(m => m.active).version;
+
+        // --- SCENARIO ANALYSIS LOGIC ---
+
+        function runScenarioAnalysis() {
+            const modelVersion = document.getElementById('scenario-model-version').value;
+            
+            // 1. Get Input Values
+            const gender = document.getElementById('scenario-gender').value;
+            const lunch = document.getElementById('scenario-lunch').value;
+            const testPrep = document.getElementById('scenario-test-prep').value;
+            const readingScore = parseFloat(document.getElementById('scenario-reading-score').value) || 0;
+            const writingScore = parseFloat(document.getElementById('scenario-writing-score').value) || 0;
+
+            const resultElement = document.getElementById('scenario-result');
+            
+            // 2. Base Score Calculation (Average of R/W)
+            let predictedScore = (readingScore + writingScore) / 2; 
+
+            // 3. Feature Impact (Boost/Penalty)
+            let boost = 0;
+            
+            // Gender Impact (Simulated correlation)
+            if (gender === 'female') {
+                boost += 5;
+            } 
+            // Male is base (0)
+
+            // Lunch Impact
+            if (lunch === 'standard') {
+                boost += 3;
+            } else { // free/reduced
+                boost -= 5;
+            }
+            
+            // Test Prep Impact
+            if (testPrep === 'completed') {
+                boost += 10;
+            }
+            // None is base (0)
+
+            // 4. Model Version Multiplier (Simulating Model Sensitivity/Bias)
+            // A better model (lower RMSE) might have a higher sensitivity (multiplier) to key features like Test Prep.
+            let multiplier = 1.0;
+            if (modelVersion.includes('v2.0')) {
+                multiplier = 1.2;
+            } else if (modelVersion.includes('v1.1')) {
+                multiplier = 1.0;
+            } else if (modelVersion.includes('v1.0')) {
+                multiplier = 0.8;
+            } else { // v0.9
+                multiplier = 0.5;
+            }
+            
+            predictedScore += (boost * multiplier);
+
+            // 5. Final Score and Display (Clamped between 0 and 100)
+            const finalScore = Math.round(Math.max(0, Math.min(100, predictedScore)));
+
+            resultElement.textContent = finalScore;
+
+            // Dynamic color change based on final score
+            resultElement.classList.remove('text-red-600', 'text-yellow-600', 'text-green-600');
+            if (finalScore >= 80) {
+                resultElement.classList.add('text-green-600');
+            } else if (finalScore >= 65) {
+                resultElement.classList.add('text-yellow-600');
+            } else {
+                resultElement.classList.add('text-red-600');
+            }
+        }
+        
+        // --- MODEL DEPLOYMENT LOGIC (Simulated) ---
+        function deployModel(versionToDeploy) {
+            // Find the current active model and deactivate it
+            const currentActive = modelData.find(m => m.active);
+            if (currentActive) {
+                currentActive.active = false;
+            }
+
+            // Find the new model and activate it
+            const newActive = modelData.find(m => m.version === versionToDeploy);
+            if (newActive) {
+                newActive.active = true;
+                activeModelVersion = newActive.version;
+                
+                // Alert the user via an in-page message box (since alerts are forbidden)
+                displayMessage(`Successfully deployed ${versionToDeploy}! Predictions now use this model.`, 'bg-green-100 text-green-800 border-green-400');
+                
+                // Redraw table and chart
+                renderModelTable();
+                drawComparisonChart();
+            }
+        }
+
+        // Simple Message Box Display (in place of alert())
+        function displayMessage(message, classes) {
+            const container = document.getElementById('model-comparison-chart').parentNode; // Parent of chart
+            let msgBox = document.getElementById('deployment-message');
+
+            if (!msgBox) {
+                msgBox = document.createElement('div');
+                msgBox.id = 'deployment-message';
+                msgBox.className = 'p-3 my-4 rounded-xl font-semibold transition-opacity duration-300 opacity-0 border';
+                container.insertBefore(msgBox, container.firstChild);
+            }
+            
+            msgBox.className = `p-3 my-4 rounded-xl font-semibold transition-opacity duration-300 opacity-100 border ${classes}`;
+            msgBox.textContent = message;
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                msgBox.classList.remove('opacity-100');
+                msgBox.classList.add('opacity-0');
+            }, 5000);
+        }
+
+        // --- Table Rendering ---
+        function renderModelTable() {
+            const tbody = document.getElementById('model-table-body');
+            tbody.innerHTML = '';
+
+            modelData.forEach(model => {
+                const row = tbody.insertRow();
+                row.className = model.active ? 'bg-red-50 font-bold' : 'hover:bg-gray-50';
+
+                // Version
+                let statusIcon = '';
+                if (model.active) {
+                    statusIcon = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">ACTIVE</span>`;
+                }
+                row.insertCell().innerHTML = `<div class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${model.version} ${statusIcon}</div>`;
+
+                // Trained On
+                row.insertCell().textContent = model.date;
+
+                // RMSE
+                row.insertCell().innerHTML = `<div class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${model.rmse.toFixed(2)}</div>`;
+
+                // R-Squared
+                row.insertCell().innerHTML = `<div class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${model.r2.toFixed(2)}</div>`;
+                
+                // Status (Simplified)
+                const status = model.active ? 'Deployed' : 'Archived';
+                const statusColor = model.active ? 'text-green-600' : 'text-gray-500';
+                row.insertCell().innerHTML = `<span class="px-6 py-4 whitespace-nowrap text-sm ${statusColor}">${status}</span>`;
+
+                // Action
+                const actionCell = row.insertCell();
+                actionCell.className = "px-6 py-4 whitespace-nowrap text-right text-sm font-medium";
+                if (!model.active) {
+                    actionCell.innerHTML = `<button onclick="deployModel('${model.version}')" class="text-indigo-600 hover:text-indigo-900 font-bold p-2 rounded-lg hover:bg-indigo-50 transition">Deploy</button>`;
+                } else {
+                    actionCell.textContent = 'In Use';
+                }
+            });
+        }
+
+        // --- D3.js Chart Rendering (Line Chart for performance over time) ---
+        const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+        const container = document.getElementById('model-comparison-chart');
+        
+        function drawComparisonChart() {
+            d3.select("#model-comparison-chart svg").remove();
+
+            const width = container.clientWidth - margin.left - margin.right;
+            const height = Math.min(width * 0.5, 400) - margin.top - margin.bottom;
+
+            const svg = d3.select("#model-comparison-chart")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X scale (Time/Version)
+            const x = d3.scalePoint()
+                .domain(modelData.map(d => d.version.split(' ')[0])) // Use just the version number for labels
+                .range([0, width])
+                .padding(0.5);
+
+            // Y scale (RMSE)
+            const y = d3.scaleLinear()
+                .domain([d3.min(modelData, d => d.rmse) - 1, d3.max(modelData, d => d.rmse) + 1])
+                .range([height, 0]);
+
+            // Add X-axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // Add Y-axis
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(5))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // Line generator
+            const line = d3.line()
+                .x(d => x(d.version.split(' ')[0]))
+                .y(d => y(d.rmse));
+
+            // Add the line
+            svg.append("path")
+                .datum(modelData)
+                .attr("fill", "none")
+                .attr("stroke", "#c53030") /* Red-700 */
+                .attr("stroke-width", 3)
+                .attr("d", line);
+
+            // Add dots and labels
+            svg.selectAll("dot")
+                .data(modelData)
+                .enter()
+                .append("circle")
+                    .attr("cx", d => x(d.version.split(' ')[0]))
+                    .attr("cy", d => y(d.rmse))
+                    .attr("r", 6)
+                    .style("fill", d => d.active ? '#48bb78' : d.color) // Green for active, version color otherwise
+                    .style("stroke", "#fff")
+                    .style("stroke-width", 2)
+                    .append("title")
+                        .text(d => `${d.version}: RMSE ${d.rmse.toFixed(2)} (R-Squared ${d.r2.toFixed(2)})`);
+            
+            // Labels
+            svg.append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "14px")
+                .text("Model Version");
+
+            svg.append("text")
+                .attr("class", "y label")
+                .attr("text-anchor", "middle")
+                .attr("y", -margin.left + 15)
+                .attr("x", -height / 2)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "14px")
+                .attr("transform", "rotate(-90)")
+                .text("RMSE (Root Mean Squared Error)");
+        }
+
+        // Run on load and resize
+        renderModelTable();
+        drawComparisonChart();
+        
+        // Set initial values and initialize scenario result
+        document.getElementById('scenario-reading-score').value = 70;
+        document.getElementById('scenario-writing-score').value = 70;
+        runScenarioAnalysis(); 
+        
+        window.addEventListener('resize', drawComparisonChart);
+    </script>
+</body>
+</html>

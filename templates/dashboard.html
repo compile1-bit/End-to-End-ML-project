@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Score Dashboard</title>
+    <!-- Load D3.js and Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* D3 Chart Tooltip Style */
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 lg:p-8 bg-gradient-to-br from-purple-100 to-indigo-50">
+
+    <!-- Main Content Wrapper -->
+    <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-7xl border border-purple-200">
+        
+        <!-- Header and Navigation -->
+        <div class="flex flex-col justify-between items-center mb-6 border-b pb-4">
+            <h1 class="text-4xl font-extrabold text-purple-800 mb-4 text-center">
+                Performance Analytics: Scatter Plot
+            </h1>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="{{ url_for('home') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out">
+                    &larr; Prediction
+                </a>
+                <a href="{{ url_for('show_analysis') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-pink-600 rounded-xl shadow-lg hover:bg-pink-700 transition duration-300 ease-in-out">
+                    Impact Analyzer
+                </a>
+                <a href="{{ url_for('show_data_health') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-green-600 rounded-xl shadow-lg hover:bg-green-700 transition duration-300 ease-in-out">
+                    Data Health
+                </a>
+                <!-- NEW LINK -->
+                <a href="{{ url_for('show_model_registry') }}" class="px-3 py-2 text-xs md:text-sm font-bold text-white bg-red-600 rounded-xl shadow-lg hover:bg-red-700 transition duration-300 ease-in-out">
+                    Model Registry
+                </a>
+            </div>
+        </div>
+
+        <p class="text-gray-500 mb-8 text-center">
+            Visualizing the correlation between Reading and Writing scores across a sample of students.
+        </p>
+        
+        <!-- Chart Container -->
+        <div id="chart-container" class="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-200">
+            <!-- SVG will be injected here by D3.js -->
+        </div>
+
+    </div>
+
+    <!-- D3.js Visualization Script -->
+    <script>
+        // Data simulation (replace this with a Jinja-injected dataset from your Flask backend)
+        const data = Array.from({ length: 100 }, () => ({
+            reading: Math.floor(Math.random() * 101),
+            writing: Math.floor(Math.random() * 101),
+            gender: Math.random() > 0.5 ? 'Male' : 'Female',
+            group: 'Group ' + ['A', 'B', 'C', 'D', 'E'][Math.floor(Math.random() * 5)]
+        }));
+
+        const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+        const container = document.getElementById('chart-container');
+        
+        // Function to create or update the chart
+        function drawChart() {
+            // Clear existing chart content
+            d3.select("#chart-container svg").remove();
+            d3.select("body .tooltip").remove(); // Ensure we remove body-level tooltips
+
+            // Calculate responsive dimensions
+            const width = container.clientWidth - margin.left - margin.right;
+            const height = Math.min(width * 0.6, 600) - margin.top - margin.bottom; // Aspect ratio 6:10 or max 600px height
+
+            const svg = d3.select("#chart-container")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X axis
+            const x = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, width]);
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).ticks(10))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // Y axis
+            const y = d3.scaleLinear()
+                .domain([0, 100])
+                .range([height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(10))
+                .selectAll("text")
+                    .attr("font-size", "12px");
+
+            // Color scale for Gender
+            const color = d3.scaleOrdinal()
+                .domain(['Male', 'Female'])
+                .range(['#4c51bf', '#d53f8c']); // Indigo and Pink/Rose
+
+            // Tooltip setup
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            // Tooltip functions
+            const mouseover = function(event, d) {
+                tooltip.style("opacity", 1);
+                d3.select(this)
+                    .attr("r", 10)
+                    .style("stroke", "black")
+                    .style("opacity", 1);
+            };
+
+            const mousemove = function(event, d) {
+                tooltip
+                    .html(`
+                        <span style="font-weight: bold; color:${color(d.gender)}">${d.gender} - ${d.group}</span><br>
+                        Reading: ${d.reading}<br>
+                        Writing: ${d.writing}
+                    `)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 30) + "px");
+            };
+
+            const mouseleave = function(event, d) {
+                tooltip.style("opacity", 0);
+                d3.select(this)
+                    .attr("r", 6)
+                    .style("stroke", "none")
+                    .style("opacity", 0.7);
+            };
+
+            // Add dots
+            svg.append('g')
+                .selectAll("dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                    .attr("cx", d => x(d.reading))
+                    .attr("cy", d => y(d.writing))
+                    .attr("r", 6)
+                    .style("fill", d => color(d.gender))
+                    .style("opacity", 0.7)
+                    .style("cursor", "pointer")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+
+            // Labels
+            svg.append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "16px")
+                .text("Reading Score");
+
+            svg.append("text")
+                .attr("class", "y label")
+                .attr("text-anchor", "middle")
+                .attr("y", -margin.left + 15)
+                .attr("x", -height / 2)
+                .attr("fill", "#4a5568")
+                .attr("font-size", "16px")
+                .attr("transform", "rotate(-90)")
+                .text("Writing Score");
+        }
+
+        // Initial chart draw
+        drawChart();
+
+        // Handle resize event for responsiveness
+        window.addEventListener('resize', drawChart);
+
+    </script>
+</body>
+</html>
